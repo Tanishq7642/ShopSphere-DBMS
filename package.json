@@ -2,6 +2,9 @@
   "name": "shopsphere-dbms",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "description": "ShopSphere-DBMS — a production-grade e-commerce database management system: normalized PostgreSQL schema, 30+ stored routines, trigger-based audit trails, 800-record dataset, analytics dashboard and SQL playground.",
   "scripts": {
     "dev": "next dev",
