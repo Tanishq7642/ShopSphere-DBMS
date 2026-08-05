@@ -417,11 +417,12 @@ CREATE INDEX IF NOT EXISTS idx_products_fts
     ON products USING GIN (to_tsvector('english', product_name));
 
 -- 14.1  Ranked full-text match on the product catalog
+-- (a full word matches the tokenized lexemes - try 'pro' for a prefix demo)
 SELECT product_name, price,
        ts_rank(to_tsvector('english', product_name),
-               plainto_tsquery('english', 'pro')) AS relevance
+               plainto_tsquery('english', 'product')) AS relevance
 FROM products
-WHERE to_tsvector('english', product_name) @@ plainto_tsquery('english', 'pro')
+WHERE to_tsvector('english', product_name) @@ plainto_tsquery('english', 'product')
 ORDER BY relevance DESC
 LIMIT 10;
 

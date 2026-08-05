@@ -3,7 +3,7 @@ import "@/app/globals.css"
 import { Inter } from "next/font/google"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Database, LayoutDashboard, ShoppingBag, TerminalSquare } from "lucide-react"
+import { Database, Home, LayoutDashboard, ShoppingBag, TerminalSquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 }
 
 const NAV_LINKS = [
-  { href: "/", label: "Home", icon: ShoppingBag },
+  { href: "/", label: "Home", icon: Home },
   { href: "/products", label: "Store", icon: ShoppingBag },
   { href: "/admin", label: "Analytics", icon: LayoutDashboard },
   { href: "/admin/database", label: "SQL Playground", icon: TerminalSquare },

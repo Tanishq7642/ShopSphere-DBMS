@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { getSellerPerformance } from "@/lib/db"
-import { prisma } from "@/lib/db"
+import { getSellerPerformance, prisma } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 

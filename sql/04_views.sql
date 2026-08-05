@@ -170,16 +170,18 @@ GROUP BY cat.category_id, cat.category_name;
 
 -- ---------------------------------------------------------------------------
 -- 9 · Payment summary (mode × status matrix via FILTER - a portable pivot)
+--    LEFT JOINs so every payment counts even when a line item is missing.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE VIEW v_payment_summary AS
+DROP VIEW IF EXISTS v_payment_summary;
+CREATE VIEW v_payment_summary AS
 SELECT p.payment_mode,
-       COUNT(*)                                    AS payments,
-       COUNT(*) FILTER (WHERE p.payment_status = 'Completed') AS completed,
-       COUNT(*) FILTER (WHERE p.payment_status = 'Failed')    AS failed,
-       COALESCE(SUM(oi.total_price), 0)            AS volume
+       COUNT(DISTINCT p.payment_id) AS payments,
+       COUNT(DISTINCT p.payment_id) FILTER (WHERE p.payment_status = 'Completed') AS completed,
+       COUNT(DISTINCT p.payment_id) FILTER (WHERE p.payment_status = 'Pending')   AS pending,
+       COUNT(DISTINCT p.payment_id) FILTER (WHERE p.payment_status = 'Failed')    AS failed,
+       COALESCE(SUM(oi.total_price), 0) AS volume
 FROM payments p
-JOIN orders o ON o.order_id = p.order_id
-JOIN order_items oi ON oi.order_id = o.order_id
+LEFT JOIN order_items oi ON oi.order_id = p.order_id
 GROUP BY p.payment_mode;
 
 -- ---------------------------------------------------------------------------

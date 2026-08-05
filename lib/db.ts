@@ -373,6 +373,18 @@ export async function getInventory(): Promise<InventoryRow[]> {
   }))
 }
 
+export async function getUnpaidShippedCount(): Promise<number> {
+  // Orders that were shipped/delivered but never had a completed payment
+  const rows = await prisma.$queryRaw<{ v: bigint }[]>`
+    SELECT COUNT(*) AS v
+      FROM orders o
+     WHERE o.order_status IN ('Shipped','Delivered')
+       AND NOT EXISTS (SELECT 1 FROM payments p
+                        WHERE p.order_id = o.order_id
+                          AND p.payment_status = 'Completed')`
+  return Number(rows[0]?.v ?? 0)
+}
+
 export async function getProductSalesStats(productId: number) {
   const rows = await prisma.$queryRaw<{ units: unknown; revenue: unknown; orders: unknown; avg: unknown }[]>`
     SELECT COALESCE(SUM(oi.quantity), 0)   AS units,

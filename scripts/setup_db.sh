@@ -82,8 +82,11 @@ step "7/8 · Creating views & materialized views (04_views.sql)"
 "$PSQL" "${DB_ARGS[@]}" -f sql/04_views.sql
 
 step "8/8 · Running the analytics showcase (05_analytics.sql)"
-"$PSQL" "${DB_ARGS[@]}" -f sql/05_analytics.sql > /tmp/shopsphere_analytics.out 2>&1 || {
-  echo "⚠ 05_analytics.sql printed diagnostics; continuing..."; }
+if ! "$PSQL" "${DB_ARGS[@]}" -f sql/05_analytics.sql > /tmp/shopsphere_analytics.out 2>&1; then
+  echo "✖ 05_analytics.sql failed:"
+  tail -25 /tmp/shopsphere_analytics.out
+  exit 1
+fi
 
 # -----------------------------------------------------------------------------
 step "Verification · row counts"

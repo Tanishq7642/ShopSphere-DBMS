@@ -19,19 +19,22 @@ import {
   getRecentOrders,
   getRevenueDaily,
   getTopProducts,
+  getUnpaidShippedCount,
 } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 export default async function AdminDashboard() {
-  const [kpis, revenue, topProducts, categorySales, statusBreakdown, recentOrders] = await Promise.all([
-    getKpis(),
-    getRevenueDaily(),
-    getTopProducts(7),
-    getCategorySales(),
-    getOrderStatusBreakdown(),
-    getRecentOrders(8),
-  ])
+  const [kpis, revenue, topProducts, categorySales, statusBreakdown, recentOrders, unpaidShipped] =
+    await Promise.all([
+      getKpis(),
+      getRevenueDaily(),
+      getTopProducts(7),
+      getCategorySales(),
+      getOrderStatusBreakdown(),
+      getRecentOrders(8),
+      getUnpaidShippedCount(),
+    ])
 
   const cards = [
     { label: "Total Revenue", value: `₹${Math.round(kpis.total_revenue).toLocaleString()}`, icon: IndianRupee, accent: "text-emerald-400" },
@@ -177,8 +180,8 @@ export default async function AdminDashboard() {
         <AlertTriangle className="h-5 w-5 shrink-0" />
         <p>
           <span className="font-semibold">Data-quality watch:</span> {kpis.failed_payments.toLocaleString()} failed
-          payments and {recentOrders.length > 0 ? "287" : "0"} shipped orders without a completed payment in the
-          dataset — run <span className="font-mono text-xs">scripts/verify_db.py</span> for the full audit report.
+          payments and {unpaidShipped.toLocaleString()} shipped orders without a completed payment in the dataset — run{" "}
+          <span className="font-mono text-xs">scripts/verify_db.py</span> for the full audit report.
         </p>
       </div>
     </div>

@@ -247,7 +247,7 @@ export const queryLibrary: LibraryQuery[] = [
     category: "12 · Pivot & search",
     title: "Full-text search · ranked product matches",
     description: "tsvector / plainto_tsquery / ts_rank.",
-    sql: "SELECT product_name, price,\n       ts_rank(to_tsvector('english', product_name),\n               plainto_tsquery('english', 'pro')) AS relevance\nFROM products\nWHERE to_tsvector('english', product_name) @@ plainto_tsquery('english', 'pro')\nORDER BY relevance DESC\nLIMIT 10;",
+    sql: "SELECT product_name, price,\n       ts_rank(to_tsvector('english', product_name),\n               plainto_tsquery('english', 'product')) AS relevance\nFROM products\nWHERE to_tsvector('english', product_name) @@ plainto_tsquery('english', 'product')\nORDER BY relevance DESC\nLIMIT 10;",
   },
   // ------------------------------------------------------------- DATA QUALITY
   {

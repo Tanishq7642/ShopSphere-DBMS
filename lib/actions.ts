@@ -28,7 +28,7 @@ export async function createProduct(formData: FormData) {
       SELECT COALESCE(MAX(product_id), 0) + 1 AS next_id FROM products`
     const next_id = rows[0]?.next_id ?? 0
 
-    await prisma.$executeRaw`
+    await prisma.$queryRaw`
       SELECT add_product(${product_name}::varchar, ${price}::numeric, ${cogs}::numeric, ${category_id}::int)`
 
     revalidatePath("/admin/products")
@@ -87,12 +87,21 @@ const READ_ONLY_PREFIX = /^\s*(select|with|explain|show)/i
 const DESTRUCTIVE_KEYWORDS =
   /\b(drop|truncate|delete|update|insert|alter|create|grant|revoke|copy|vacuum|set\s+role|call|do\s+\$\$)/i
 
+/** Strip comments AND single-quoted string literals so the guard never
+ *  false-positives on values like WHERE action = 'UPDATE'. */
+function sanitizeForGuard(sql: string): string {
+  return sql
+    .replace(/--[^\n]*/g, " ")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/'([^']|'')*'/g, " '' ")
+}
+
 export async function executeQuery(query: string) {
   try {
     if (!query.trim()) return { error: "Please enter a SQL query." }
 
     // Always block destructive statements (this is a demo playground)
-    if (DESTRUCTIVE_KEYWORDS.test(query.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, ""))) {
+    if (DESTRUCTIVE_KEYWORDS.test(sanitizeForGuard(query))) {
       return {
         error:
           "Only read-only queries are allowed in the playground (SELECT / WITH / EXPLAIN). " +

@@ -115,6 +115,10 @@ def main() -> None:
         cmd = raw.lower().split()[0]
         args = raw.split()[1:]
 
+        # normalize the 'add order item' alias → 'add item'
+        if cmd == "add" and len(args) >= 2 and args[0] == "order" and args[1] == "item":
+            args = ["item"] + args[2:]
+
         # ---------- help / exit ---------------------------------------------
         if cmd in ("exit", "quit"): break
         if cmd == "help":
@@ -167,12 +171,10 @@ def main() -> None:
             elif cmd == "add" and args[0] == "inventory":
                 pid = ask("product id", int); st = ask("stock", int); w = ask("warehouse id", int) or 1
                 r = call(conn, "SELECT * FROM add_inventory(%s,%s,%s)", (pid, st, w)); ok(f"inventory {r[0]['add_inventory']} created")
-            elif cmd == "add" and args[0] == "order":
+            elif cmd == "add" and args[0] == "order" and len(args) == 1:
                 oid = ask("order id", int); cid = ask("customer id", int); sid = ask("seller id", int)
                 pid = ask("product id", int); st = ask("status (Pending)", str) or "Pending"
                 call(conn, "SELECT * FROM add_order(%s,%s,%s,%s,%s)", (oid, cid, sid, pid, st)); ok("order created")
-            elif cmd == "add" and args[0] == "order" and len(args) > 2:  # add order item
-                pass
             elif cmd == "add" and args[0] == "item":
                 iid = ask("item id", int); oid = ask("order id", int); pid = ask("product id", int)
                 q = ask("quantity", int); up = ask("unit price", float)
@@ -190,6 +192,9 @@ def main() -> None:
             # ---------- removes ------------------------------------------------
             elif cmd == "remove":
                 kind, idx = args[0], int(args[1])
+                if kind not in ("customer", "seller", "product", "inventory"):
+                    warn(f"cannot remove '{kind}' - allowed: customer, seller, product, inventory")
+                    continue
                 call(conn, f"SELECT * FROM remove_{kind}(%s)", (idx,)); ok(f"{kind} {idx} removed")
             elif cmd == "cancel":
                 call(conn, "SELECT * FROM cancel_order(%s)", (int(args[1]),)); ok(f"order {args[1]} cancelled")

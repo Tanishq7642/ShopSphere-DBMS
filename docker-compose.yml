@@ -24,7 +24,8 @@ services:
       - ./sql/03_triggers.sql:/docker-entrypoint-initdb.d/03_triggers.sql:ro
       - ./sql/04_views.sql:/docker-entrypoint-initdb.d/04_views.sql:ro
       - ./sql/05_analytics.sql:/docker-entrypoint-initdb.d/05_analytics.sql:ro
-      - ./sql/06_load_data.sql:/docker-entrypoint-initdb.d/06_load_data.sql:ro
+      # Docker variant uses /data absolute paths (see file header)
+      - ./sql/06_load_data.docker.sql:/docker-entrypoint-initdb.d/06_load_data.sql:ro
       - ./data:/data:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce_db"]
