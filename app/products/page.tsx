@@ -3,8 +3,9 @@ import { Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getCategories, getProducts } from "@/lib/db"
+
+import { SortSelect } from "./sort-select"
 
 export const dynamic = "force-dynamic"
 
@@ -83,21 +84,7 @@ export default async function ProductsPage({
             </div>
 
             <div className="md:ml-auto md:w-48">
-              <Select
-                value={sort}
-                onValueChange={(v) => {
-                  window.location.href = buildHref({ sort: v, page: undefined })
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sort" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Name (A–Z)</SelectItem>
-                  <SelectItem value="price_asc">Price: low → high</SelectItem>
-                  <SelectItem value="price_desc">Price: high → low</SelectItem>
-                </SelectContent>
-              </Select>
+              <SortSelect sort={sort} />
             </div>
           </div>
         </div>
