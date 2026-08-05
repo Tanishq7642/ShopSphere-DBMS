@@ -120,7 +120,19 @@ export async function executeQuery(query: string) {
       new Promise((_, reject) => setTimeout(() => reject(new Error("Query timed out (10s limit).")), 10_000)),
     ])
 
-    return { data: Array.isArray(result) ? result : [result] }
+    // Postgres returns COUNT/SUM-over-bigint as BigInt, which JSON cannot
+    // serialize - stringify it so every result survives the API boundary.
+    const rows = Array.isArray(result) ? result : [result]
+    return {
+      data: rows.map((row) => {
+        if (row === null || typeof row !== "object") return row
+        const out: Record<string, unknown> = {}
+        for (const [key, value] of Object.entries(row)) {
+          out[key] = typeof value === "bigint" ? value.toString() : value
+        }
+        return out
+      }),
+    }
   } catch (error: any) {
     console.error("Error executing query:", error)
     return { error: error?.message || "An error occurred while executing the query." }

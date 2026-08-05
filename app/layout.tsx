@@ -3,7 +3,7 @@ import "@/app/globals.css"
 import { Inter } from "next/font/google"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Database, Home, LayoutDashboard, ShoppingBag, TerminalSquare } from "lucide-react"
+import { Database, GraduationCap, Home, LayoutDashboard, ShoppingBag, TerminalSquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -21,6 +21,7 @@ const NAV_LINKS = [
   { href: "/products", label: "Store", icon: ShoppingBag },
   { href: "/admin", label: "Analytics", icon: LayoutDashboard },
   { href: "/admin/database", label: "SQL Playground", icon: TerminalSquare },
+  { href: "/admin/quiz", label: "SQL Assessment", icon: GraduationCap },
 ]
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -75,6 +76,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <div className="flex gap-4 text-xs text-muted-foreground">
                   <Link href="/admin/database" className="hover:text-foreground transition-colors">
                     SQL Playground
+                  </Link>
+                  <Link href="/admin/quiz" className="hover:text-foreground transition-colors">
+                    SQL Assessment
                   </Link>
                   <Link href="/admin/analytics" className="hover:text-foreground transition-colors">
                     Analytics

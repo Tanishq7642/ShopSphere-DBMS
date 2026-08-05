@@ -14,7 +14,8 @@
     "db:cli": "python scripts/db_cli.py",
     "db:pull": "prisma db pull",
     "db:generate": "prisma generate",
-    "demo": "tsx index.ts"
+    "demo": "tsx index.ts",
+    "test:quiz": "tsx scripts/test-quiz-grader.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

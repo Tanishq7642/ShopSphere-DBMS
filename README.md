@@ -92,7 +92,9 @@ ShopSphere-DBMS/
 │   ├── products/                 storefront: search · filter · sort · pages
 │   ├── admin/                    analytics dashboard + orders/customers/
 │   │                             inventory/products management
-│   └── admin/database/           ★ SQL Playground with 40-query library
+│   ├── admin/database/           ★ SQL Playground with 40-query library
+│   └── admin/quiz/               ★ SQL Assessment - 13 auto-graded challenges
+├── lib/quiz.ts                   the grading engine (challenges + result comparison)
 ├── prisma/schema.prisma          introspected ORM mapping (matches sql/ 1:1)
 ├── data/                         9 CSVs · 800 records each
 ├── legacy/                       earlier iterations (Python demos, Express &
@@ -124,6 +126,14 @@ Everything below runs as-is against the dataset — open the **SQL Playground**
 | 16 | Performance | `EXPLAIN ANALYZE`, index-usage stats |
 | 17 | Data quality | orphan-FK audit, money-consistency, below-cost margins |
 
+Prefer to be *tested* on all of it? The **SQL Assessment** (`/admin/quiz`)
+grades **13 challenges** — joins, filtering, aggregation, correlated subqueries,
+CTEs, window functions, set operations, `ROLLUP`, full-text search and data
+quality — **against the live database**. Write your query, hit *Check answer*,
+and get an instant verdict: the grader runs your SQL and the reference solution
+side by side, then compares columns (as a set) and rows (as a multiset), and
+shows a side-by-side diff when you miss.
+
 ---
 
 ## 🧪 Verification & CI
@@ -133,7 +143,8 @@ Everything below runs as-is against the dataset — open the **SQL Playground**
 | FK integrity + constraints | `python scripts/verify_db.py` | **11/11 PASS** (verified against live DB) |
 | Row counts | `scripts/setup_db.sh` (final step) | 800 × 9 tables, 0 orphans |
 | Type safety | `pnpm typecheck` | ✅ 0 errors |
-| Production build | `pnpm build` | ✅ 15 routes |
+| Production build | `pnpm build` | ✅ 16 routes |
+| Quiz auto-grading | `app/admin/quiz` | 13/13 challenges grade correctly against the live DB |
 | CI (GitHub Actions) | `.github/workflows/ci.yml` | typecheck → build → **SQL smoke test** against a Postgres service container |
 
 The repository ships with a **fully reproducible database**: `setup_db.sh` drops

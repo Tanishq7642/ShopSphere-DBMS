@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { BookOpen, Clock, Database, Play, RotateCcw, Save, Sparkles, TerminalSquare } from "lucide-react"
+import Link from "next/link"
+import { BookOpen, Clock, Database, GraduationCap, Play, RotateCcw, Save, Sparkles, TerminalSquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -120,14 +121,22 @@ export default function DatabaseQueryPage() {
       {/* main panel */}
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <Tabs defaultValue="editor" className="flex flex-1 flex-col">
-          <TabsList className="w-fit">
-            <TabsTrigger value="editor">
-              <TerminalSquare className="mr-2 h-4 w-4" /> Query Editor
-            </TabsTrigger>
-            <TabsTrigger value="saved">
-              <Save className="mr-2 h-4 w-4" /> Saved Queries
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <TabsList className="w-fit">
+              <TabsTrigger value="editor">
+                <TerminalSquare className="mr-2 h-4 w-4" /> Query Editor
+              </TabsTrigger>
+              <TabsTrigger value="saved">
+                <Save className="mr-2 h-4 w-4" /> Saved Queries
+              </TabsTrigger>
+            </TabsList>
+            <Link href="/admin/quiz">
+              <Button variant="outline" size="sm" className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300">
+                <GraduationCap className="mr-2 h-4 w-4" />
+                Test yourself · SQL Assessment
+              </Button>
+            </Link>
+          </div>
 
           <TabsContent value="editor" className="mt-4 flex flex-1 flex-col gap-4">
             <Card>
