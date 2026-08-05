@@ -54,3 +54,5 @@ yarn-error.log*
 # local database dumps
 *.sql.gz
 *.dump
+
+tsconfig.tsbuildinfo
