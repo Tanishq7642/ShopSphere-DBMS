@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Data Analytics Dashboard</h1>
+        <button onclick="runQuery('SELECT * FROM sales LIMIT 10')">Fetch Sales Data</button>
+        <button onclick="runQuery('SELECT category, SUM(revenue) FROM sales GROUP BY category')">Category Revenue</button>
+        <br><br>
+        <input type="text" id="customQuery" placeholder="Enter your SQL query">
+        <button onclick="runCustomQuery()">Run Custom Query</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function runQuery(query) {
+            fetch('/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            })
+            .then(response => response.json())
+            .then(data => displayResults(data));
+        }
+
+        function runCustomQuery() {
+            const query = document.getElementById("customQuery").value;
+            runQuery(query);
+        }
+
+        function displayResults(data) {
+            let output = "<table><tr>";
+            if (data.length > 0) {
+                Object.keys(data[0]).forEach(col => output += `<th>${col}</th>`);
+                output += "</tr>";
+                data.forEach(row => {
+                    output += "<tr>";
+                    Object.values(row).forEach(val => output += `<td>${val}</td>`);
+                    output += "</tr>";
+                });
+                output += "</table>";
+            } else {
+                output = "<p>No data found</p>";
+            }
+            document.getElementById("result").innerHTML = output;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model category {
+  category_id         Int                   @id
+  category_name       String                @unique @db.VarChar(20)
+  category_sales_logs category_sales_logs[]
+  products            products[]
+}
+
+model customers {
+  customer_id         Int                  @id
+  first_name          String               @db.VarChar(20)
+  last_name           String               @db.VarChar(20)
+  state               String               @default("Unknown") @db.VarChar(100)
+  address             String               @default("Unknown") @db.VarChar(255)
+  customer_order_logs customer_order_logs?
+  orders              orders[]
+
+  @@index([state], map: "idx_customers_state")
+  @@index([state, first_name, last_name], map: "idx_customers_state_name")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inventory {
+  inventory_id    Int      @id
+  product_id      Int
+  stock           Int      @default(0)
+  warehouse_id    Int      @default(1)
+  last_stock_date DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  products        products @relation(fields: [product_id], references: [product_id], onDelete: NoAction, map: "fk_inventory_products")
+
+  @@index([product_id], map: "idx_inventory_product")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  order_item_id  Int      @id
+  order_id       Int
+  product_id     Int
+  quantity       Int
+  price_per_unit Decimal  @db.Decimal(10, 2)
+  total_price    Decimal  @db.Decimal(12, 2)
+  orders         orders   @relation(fields: [order_id], references: [order_id], onDelete: NoAction, map: "fk_order_items_orders")
+  products       products @relation(fields: [product_id], references: [product_id], onDelete: NoAction, map: "fk_order_items_products")
+
+  @@unique([order_id, product_id], map: "uq_order_items")
+  @@index([order_id], map: "idx_order_items_order")
+  @@index([product_id], map: "idx_order_items_product")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  order_id     Int               @id
+  order_date   DateTime          @default(dbgenerated("CURRENT_DATE")) @db.Date
+  customer_id  Int
+  seller_id    Int
+  product_id   Int
+  order_status order_status_enum @default(Pending)
+  order_items  order_items[]
+  customers    customers         @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, map: "fk_orders_customers")
+  products     products          @relation(fields: [product_id], references: [product_id], onDelete: NoAction, map: "fk_orders_products")
+  sellers      sellers           @relation(fields: [seller_id], references: [seller_id], onDelete: NoAction, map: "fk_orders_sellers")
+  payments     payments[]
+  shippings    shippings[]
+
+  @@index([customer_id], map: "idx_orders_customer")
+  @@index([order_date(sort: Desc)], map: "idx_orders_date")
+  @@index([product_id], map: "idx_orders_product")
+  @@index([seller_id], map: "idx_orders_seller")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payments {
+  payment_id     Int                 @id
+  order_id       Int
+  payment_date   DateTime            @default(dbgenerated("CURRENT_DATE")) @db.Date
+  payment_mode   payment_mode_enum   @default(Credit_Card)
+  payment_status payment_status_enum @default(Completed)
+  orders         orders              @relation(fields: [order_id], references: [order_id], onDelete: NoAction, map: "fk_payments_orders")
+
+  @@index([order_id], map: "idx_payments_order")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model products {
+  product_id          Int                   @id
+  product_name        String                @unique @db.VarChar(50)
+  price               Decimal               @db.Decimal(10, 2)
+  cogs                Decimal               @db.Decimal(10, 2)
+  category_id         Int
+  category_sales_logs category_sales_logs[]
+  inventory           inventory[]
+  order_items         order_items[]
+  orders              orders[]
+  category            category              @relation(fields: [category_id], references: [category_id], onDelete: NoAction, map: "fk_products_category")
+
+  @@index([category_id], map: "idx_products_category")
+}
+
+model sellers {
+  seller_id   Int      @id
+  seller_name String   @db.VarChar(50)
+  orders      orders[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model shippings {
+  shipping_id     Int                  @id
+  order_id        Int
+  shipping_date   DateTime             @default(dbgenerated("CURRENT_DATE")) @db.Date
+  return_date     DateTime?            @db.Date
+  delivery_status delivery_status_enum @default(Pending)
+  orders          orders               @relation(fields: [order_id], references: [order_id], onDelete: NoAction, map: "fk_shippings_orders")
+
+  @@index([order_id], map: "idx_shippings_order")
+}
+
+model category_sales_logs {
+  entry_id    BigInt   @id @default(autoincrement())
+  category_id Int
+  product_id  Int
+  quantity    Int
+  revenue     Decimal  @db.Decimal(12, 2)
+  sale_date   DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  category    category @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+  products    products @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model customer_order_logs {
+  customer_id     Int       @id
+  total_orders    Int       @default(0)
+  last_order_date DateTime? @db.Date
+  customers       customers @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model daily_sales_snapshot {
+  snapshot_date   DateTime  @id @db.Date
+  total_orders    Int?
+  total_revenue   Decimal?  @db.Decimal(14, 2)
+  units_sold      Int?
+  avg_order_value Decimal?  @db.Decimal(14, 2)
+  new_customers   Int?
+  top_category    String?   @db.VarChar(20)
+  captured_at     DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model numbers {
+  n Int @id
+}
+
+model order_logs {
+  log_id     BigInt             @id @default(autoincrement())
+  order_id   Int
+  action     String             @db.VarChar(20)
+  old_status order_status_enum?
+  new_status order_status_enum?
+  changed_at DateTime           @default(now()) @db.Timestamptz(6)
+
+  @@index([order_id], map: "idx_order_logs_order")
+}
+
+enum delivery_status_enum {
+  Pending
+  In_Transit @map("In Transit")
+  Delivered
+}
+
+enum order_status_enum {
+  Pending
+  Shipped
+  Delivered
+  Cancelled
+}
+
+enum payment_mode_enum {
+  Credit_Card @map("Credit Card")
+  Gift_Card   @map("Gift Card")
+  PayPal
+}
+
+enum payment_status_enum {
+  Completed
+  Pending
+  Failed
+}

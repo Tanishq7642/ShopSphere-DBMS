@@ -1,0 +1,2 @@
+# ShopSphere-DBMS Python tooling
+psycopg2-binary>=2.9

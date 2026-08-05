@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  web:
+    name: Web app · typecheck + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+
+  database:
+    name: Database · SQL smoke test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ecommerce_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ecommerce_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      DB_NAME: ecommerce_db
+    steps:
+      - uses: actions/checkout@v4
+
+      # The load script uses psql \copy with paths relative to the project root
+      - name: Run schema + functions + procedures + triggers
+        run: |
+          psql -v ON_ERROR_STOP=1 -d ecommerce_db -f sql/00_schema.sql
+          psql -v ON_ERROR_STOP=1 -d ecommerce_db -f sql/01_functions.sql
+          psql -v ON_ERROR_STOP=1 -d ecommerce_db -f sql/02_procedures.sql
+          psql -v ON_ERROR_STOP=1 -d ecommerce_db -f sql/03_triggers.sql
+
+      - name: Load the 800-record dataset (triggers paused)
+        run: |
+          psql -d ecommerce_db -c "ALTER TABLE orders DISABLE TRIGGER ALL; ALTER TABLE order_items DISABLE TRIGGER ALL; ALTER TABLE payments DISABLE TRIGGER ALL; ALTER TABLE inventory DISABLE TRIGGER ALL;"
+          psql -v ON_ERROR_STOP=1 -d ecommerce_db -f sql/06_load_data.sql
+          psql -d ecommerce_db -c "ALTER TABLE orders ENABLE TRIGGER ALL; ALTER TABLE order_items ENABLE TRIGGER ALL; ALTER TABLE payments ENABLE TRIGGER ALL; ALTER TABLE inventory ENABLE TRIGGER ALL;"
+
+      - name: Create views + run the full analytics showcase
+        run: |
+          psql -v ON_ERROR_STOP=1 -d ecommerce_db -f sql/04_views.sql
+          psql -v ON_ERROR_STOP=1 -d ecommerce_db -f sql/05_analytics.sql > /dev/null
+
+      - name: Verify row counts + FK integrity
+        run: |
+          psql -t -d ecommerce_db -c "
+            SELECT 'products', COUNT(*) FROM products
+            UNION ALL SELECT 'orders', COUNT(*) FROM orders
+            UNION ALL SELECT 'customers', COUNT(*) FROM customers;"
+          psql -t -d ecommerce_db -c "
+            SELECT 'orphaned', COUNT(*) FROM order_items oi
+            WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.order_id = oi.order_id);"
+
+      - name: Exercise the flagship transaction pipeline
+        run: |
+          psql -d ecommerce_db -c "CALL place_order(1, 1, 1, 2, 'Credit Card', NULL);"
+          psql -d ecommerce_db -c "CALL cancel_order_proc(801);"
+          psql -d ecommerce_db -c "SELECT COUNT(*) FROM order_logs WHERE order_id = 801;"
